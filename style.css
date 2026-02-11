@@ -1,0 +1,79 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* CARTA */
+.card {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 30px;
+    padding: 40px 35px;
+    text-align: center;
+
+    /* 👇 CLAVE PARA CENTRAR TODO */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    max-width: 420px;
+    width: 90%;
+}
+
+/* GIF */
+.gif {
+    width: 170px;
+    margin-bottom: 25px;
+}
+
+/* TEXTO */
+.card h1 {
+    color: white;
+    font-size: 2rem;
+    margin-bottom: 30px;
+}
+
+/* BOTONES */
+.buttons {
+    position: relative;
+    height: 140px;
+    width: 100%;
+}
+
+button {
+    border: none;
+    border-radius: 30px;
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    position: absolute;
+}
+
+/* SÍ */
+#yesBtn {
+    background: #ff4d6d;
+    color: white;
+    left: 50%;
+    transform: translateX(-120%) scale(1);
+    box-shadow: 0 10px 25px rgba(255, 77, 109, 0.5);
+}
+
+/* NO */
+#noBtn {
+    background: white;
+    color: #ff4d6d;
+    left: 50%;
+    transform: translateX(20%) scale(1);
+}

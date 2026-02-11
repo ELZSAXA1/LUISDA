@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sincronía 3D | Premium Experience</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Montserrat:wght@200;400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: #0a0a0a;
+            height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
+            /* PERSPECTIVA PARA EL EFECTO 3D */
+            perspective: 1500px;
+        }
+
+        /* --- PANTALLA DE ENTRADA --- */
+        #gate {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 1s ease;
+        }
+        #gate button {
+            background: none; border: 1px solid rgba(255,255,255,0.2);
+            color: white; padding: 15px 40px; border-radius: 50px;
+            font-family: 'Cormorant Garamond', serif; font-size: 1.2rem;
+            cursor: pointer; letter-spacing: 4px;
+        }
+
+        /* --- FONDO ATMOSFÉRICO SIEMPRE PRESENTE --- */
+        #bg-wrap {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; opacity: 0.5; transition: opacity 2s ease;
+        }
+        #bgVideo {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: blur(40px) brightness(0.5) saturate(1.2);
+        }
+
+        /* --- CONTENEDOR 3D --- */
+        #card-wrapper {
+            position: relative;
+            z-index: 100;
+            width: 90%;
+            max-width: 380px;
+            transform-style: preserve-3d;
+            display: none; /* Se activa al dar click */
+            will-change: transform;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 35px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+            transform-style: preserve-3d;
+            /* Animación de "respiración" suave */
+            animation: breathe 8s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: translateZ(0); }
+            50% { transform: translateZ(30px); }
+        }
+
+        /* --- MEDIA BOX (EFECTO PROFUNDIDAD) --- */
+        .media-box {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            background: #111;
+            /* La foto se "hunde" en la tarjeta */
+            transform: translateZ(20px);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .media-box img, .media-box video {
+            width: 100%; height: 100%; object-fit: cover;
+            opacity: 0.9;
+        }
+
+        /* --- TEXTOS --- */
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 300; font-style: italic;
+            font-size: 1.8rem; color: #fff;
+            margin-bottom: 30px;
+            transform: translateZ(40px); /* Texto flota más adelante */
+        }
+
+        /* --- BOTONES --- */
+        .btn-group {
+            display: flex; gap: 15px; justify-content: center;
+            transform: translateZ(60px); /* Botones flotan al frente */
+        }
+
+        button.ui-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white; padding: 12px 28px;
+            border-radius: 50px; font-size: 0.7rem;
+            font-weight: 400; cursor: pointer; transition: 0.3s;
+            letter-spacing: 2px;
+        }
+
+        #yesBtn { border-color: rgba(255,255,255,0.5); }
+        #yesBtn:hover { background: #fff; color: #000; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="gate"><button onclick="init()">ENTRAR</button></div>
+
+    <div id="bg-wrap">
+        <video id="bgVideo" loop muted playsinline>
+            <source src="AHORASIII.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <audio id="musicaSi" loop><source src="cancion.mp3" type="audio/mp3"></audio>
+    <audio id="musicaNo"></audio>
+
+    <div id="card-wrapper">
+        <div class="glass-card" id="mainCard">
+            
+            <div class="media-box">
+                <img src="luispto.webp" id="mainImg">
+                <video id="finalVid" loop muted playsinline class="hidden">
+                    <source src="AHORASIII.mp4" type="video/mp4">
+                </video>
+            </div>
+
+            <h1 id="title">¿Andrea Te gustaría ser mi San Valentín?</h1>
+            
+            <div class="btn-group" id="controls">
+                <button class="ui-btn" id="noBtn">No</button>
+                <button class="ui-btn" id="yesBtn">Sí, acepto</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gate = document.getElementById('gate');
+        const wrapper = document.getElementById('card-wrapper');
+        const card = document.getElementById('mainCard');
+        const bgVideo = document.getElementById('bgVideo');
+        const musicaSi = document.getElementById('musicaSi');
+        const musicaNo = document.getElementById('musicaNo');
+        const finalVid = document.getElementById('finalVid');
+        const yesBtn = document.getElementById('yesBtn');
+        const noBtn = document.getElementById('noBtn');
+
+        // 1. DESBLOQUEO DE MEDIA
+        function init() {
+            gate.style.opacity = '0';
+            setTimeout(() => {
+                gate.style.display = 'none';
+                wrapper.style.display = 'block';
+                bgVideo.play().catch(e => console.log("Video fail"));
+            }, 1000);
+        }
+
+        // 2. MOTOR 3D (Mouse + Giroscopio)
+        function applyRotation(x, y) {
+            // Límites de rotación para que sea elegante
+            const rotY = (x / window.innerWidth - 0.5) * 30;
+            const rotX = (y / window.innerHeight - 0.5) * -30;
+            card.style.transform = `rotateY(${rotY}deg) rotateX(${rotX}deg)`;
+        }
+
+        // Mouse en PC
+        document.addEventListener('mousemove', (e) => {
+            if(wrapper.style.display === 'block') {
+                applyRotation(e.clientX, e.clientY);
+            }
+        });
+
+        // Giroscopio en Móvil
+        window.addEventListener('deviceorientation', (e) => {
+            if(wrapper.style.display === 'block' && e.gamma) {
+                // Ajustamos los valores del sensor a la rotación
+                const x = (e.gamma + 30) * (window.innerWidth / 60);
+                const y = (e.beta - 40) * (window.innerHeight / 60);
+                applyRotation(x, y);
+            }
+        }, true);
+
+        // 3. LÓGICA DEL "NO" SUCESIVA
+        let clicksNo = 0;
+        const audiosNo = ['no1.mp3', 'no2.mp3', 'no3.mp3']; // Pon aquí tus archivos
+
+        noBtn.addEventListener('click', () => {
+            clicksNo++;
+            
+            // Sonido sucesivo (aumenta intensidad/volumen)
+            if(audiosNo[clicksNo-1]) {
+                musicaNo.src = audiosNo[clicksNo-1];
+            }
+            musicaNo.volume = Math.min(1, 0.4 + (clicksNo * 0.2));
+            musicaNo.play();
+
+            // Animación de la tarjeta
+            yesBtn.style.transform = `translateZ(60px) scale(${1 + clicksNo * 0.2})`;
+            noBtn.style.opacity = Math.max(0.2, 1 - clicksNo * 0.2);
+            if(clicksNo >= 5) noBtn.style.display = 'none';
+        });
+
+        // 4. LÓGICA DEL "SÍ"
+        yesBtn.addEventListener('click', () => {
+            musicaSi.play();
+            finalVid.play();
+            
+            document.getElementById('mainImg').classList.add('hidden');
+            finalVid.classList.remove('hidden');
+            
+            document.getElementById('title').innerText = "Sabía que dirías que sí ❤️";
+            document.getElementById('controls').style.display = 'none';
+            
+            // El fondo se aclara y se sincroniza
+            document.getElementById('bg-wrap').style.opacity = "1";
+            bgVideo.style.filter = "blur(10px) brightness(0.8)";
+        });
+    </script>
+</body>
+</html>
